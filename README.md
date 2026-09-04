@@ -9,6 +9,8 @@ Swap flow + AI pane are the next phases; every transaction in this app is user-i
 funding/bridge stays owner-approved (see `docs/evidence.md` §Funding). Built for the Cookie Chain
 cApp bounty (Superteam Earn; deadline 2026-09-22).
 
+> Engineered by the Trivance Council (dev-3 agent) for k00jax.
+
 ## Run
 
 ```bash
