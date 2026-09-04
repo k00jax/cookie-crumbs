@@ -101,10 +101,9 @@ export function NightlySetupModal({ open, onClose }: { open: boolean; onClose: (
           <CopyRow label="Bridge (funding)" value={BRIDGE_URL} />
         </div>
 
-        <div className="mt-3 rounded-lg border border-amber-500/25 bg-amber-500/5 px-3 py-2 text-xs text-amber-200/90">
-          ⚠ Use <span className="font-mono">wss://rpc.cookiescan.io</span> — the legacy{" "}
-          <span className="font-mono">wss://wss.cookiescan.io</span> host is dead (it 301-redirects
-          to bakedbazaar.art with a mismatched TLS cert).
+        <div className="mt-3 rounded-lg border border-zinc-700/70 bg-zinc-800/40 px-3 py-2 text-xs text-zinc-400">
+          Tip: Cookie Chain&apos;s network WebSocket is <span className="font-mono">wss://rpc.cookiescan.io</span>.
+          The older <span className="font-mono">wss://wss.cookiescan.io</span> hostname is no longer valid, so use the value above.
         </div>
 
         <div className="mt-4 flex justify-end gap-2">

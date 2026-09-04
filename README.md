@@ -4,9 +4,10 @@ Live analytics terminal + portfolio tracker for [Cookie Chain](https://cookiesca
 SVM/Agave). Real-time market heatmap, token detail with rolling price history, pool explorer, and a
 connected-wallet portfolio — plus a one-click swap coming in the next phase.
 
-**Status: local dev build, phases D0–D3.** Not deployed, not public. Every transaction in this app
-is user-initiated; nothing auto-signs. Funding/bridge and swap flows are gated on wallet-owner
-approval (see `docs/evidence.md` §Funding).
+**Status: D0–D3 build — LIVE at [https://crumbs.fonger.ai](https://crumbs.fonger.ai) (read-only phase).**
+Swap flow + AI pane are the next phases; every transaction in this app is user-initiated, and
+funding/bridge stays owner-approved (see `docs/evidence.md` §Funding). Built for the Cookie Chain
+cApp bounty (Superteam Earn; deadline 2026-09-22).
 
 ## Run
 
