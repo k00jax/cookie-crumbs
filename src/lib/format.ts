@@ -2,10 +2,20 @@
 
 export function fmtUsd(n: number | null | undefined, digits = 2): string {
   if (n === null || n === undefined || !Number.isFinite(n)) return "—";
-  if (n !== 0 && Math.abs(n) < 0.01) return `$${n.toPrecision(2)}`;
+  if (n !== 0 && Math.abs(n) < 0.01) {
+    // Tiny values: use significant digits so sub-cent prices never print as e-notation.
+    return `$${n.toLocaleString("en-US", {
+      minimumSignificantDigits: 2,
+      maximumSignificantDigits: 6,
+    })}`;
+  }
+  // Whole-dollar display for large values — but min can never exceed max (RangeError otherwise;
+  // hit for mcap >= $1,000 e.g. GORBOY $3,646).
+  const max = n >= 1000 ? 0 : digits;
+  const min = Math.max(0, Math.min(digits, max));
   return `$${n.toLocaleString("en-US", {
-    minimumFractionDigits: digits,
-    maximumFractionDigits: n >= 1000 ? 0 : digits,
+    minimumFractionDigits: min,
+    maximumFractionDigits: max,
   })}`;
 }
 

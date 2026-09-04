@@ -22,6 +22,7 @@ import {
 } from "@/lib/format";
 import type { Asset, Market } from "@/lib/types";
 import { Card, ErrorState, LoadingRows, Skeleton } from "./ui";
+import { TokenImage } from "./TokenImage";
 
 const HISTORY_CAP = 90; // 5 s polls → 7.5 min window
 
@@ -57,7 +58,10 @@ export function TokenDetail({
     const tick = async () => {
       try {
         const r = await fetchPrice(mint);
-        const usd = r.data?.price?.usd;
+        const raw = r.data?.price?.usd;
+        // NOTE: /api/price returns usd as a NUMBER for some mints and a STRING for others
+        // (verified: GORBOY → "0.000000364660920632"). Normalize both.
+        const usd = typeof raw === "string" ? Number.parseFloat(raw) : raw;
         if (alive && typeof usd === "number" && Number.isFinite(usd)) {
           setHistory((h) => {
             const next = [...h, { t: new Date().toLocaleTimeString("en-US", { hour12: false }), price: usd }];
@@ -134,12 +138,11 @@ export function TokenDetail({
     >
       <div className="p-4">
         <div className="flex items-center gap-3">
-          {img ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={img} alt="" className="h-10 w-10 rounded-xl bg-zinc-800 object-cover" />
-          ) : (
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-800 text-xl">🍪</div>
-          )}
+          <TokenImage
+            src={img}
+            alt={asset.symbol}
+            className="h-10 w-10 rounded-xl bg-zinc-800 object-cover"
+          />
           <div className="min-w-0">
             <div className="flex items-baseline gap-2">
               <h3 className="truncate text-lg font-bold text-white">{asset.name}</h3>

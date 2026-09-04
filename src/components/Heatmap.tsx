@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import type { Asset } from "@/lib/types";
 import { changeColor, fmtCompact, fmtNum, fmtUsd, heatColor } from "@/lib/format";
 import { Card, EmptyState, Skeleton } from "./ui";
+import { TokenImage } from "./TokenImage";
 
 export function Heatmap({
   assets,
@@ -94,12 +95,7 @@ export function Heatmap({
                   </span>
                 )}
                 <div className="flex items-center gap-1.5">
-                  {a.imageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={a.imageUrl} alt="" className="h-4 w-4 rounded-full bg-zinc-800 object-cover" loading="lazy" />
-                  ) : (
-                    <span className="h-4 w-4 rounded-full bg-zinc-700 text-center text-[9px] leading-4">🍪</span>
-                  )}
+                  <TokenImage src={a.imageUrl} alt={a.symbol} className="h-4 w-4 rounded-full bg-zinc-800 object-cover" />
                   <span className="truncate text-sm font-semibold text-white">{a.symbol}</span>
                   <span className="truncate text-[10px] text-zinc-400">{a.category ?? ""}</span>
                 </div>
