@@ -1,25 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import useSWR, { SWRConfig } from "swr";
+import useSWR from "swr";
 import { POLL_STATUS_MS, POLL_TRENDING_MS, WS_URL } from "./constants";
 import { ChainStream, type ChainStreamStatus } from "./stream";
 import type { ApiStatus, Asset, TrendingResp } from "./types";
-
-export function SwrSettings({ children }: { children: React.ReactNode }) {
-  return (
-    <SWRConfig
-      value={{
-        errorRetryCount: 2,
-        dedupingInterval: 2_000,
-        focusThrottleInterval: 10_000,
-        keepPreviousData: true,
-      }}
-    >
-      {children}
-    </SWRConfig>
-  );
-}
 
 async function fetcher<T>(url: string): Promise<T> {
   const res = await fetch(url);

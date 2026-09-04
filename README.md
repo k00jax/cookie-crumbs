@@ -1,36 +1,83 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# CRUMBS — Cookie Chain Market Terminal 🍪
 
-## Getting Started
+Live analytics terminal + portfolio tracker for [Cookie Chain](https://cookiescan.io) (independent
+SVM/Agave). Real-time market heatmap, token detail with rolling price history, pool explorer, and a
+connected-wallet portfolio — plus a one-click swap coming in the next phase.
 
-First, run the development server:
+**Status: local dev build, phases D0–D3.** Not deployed, not public. Every transaction in this app
+is user-initiated; nothing auto-signs. Funding/bridge and swap flows are gated on wallet-owner
+approval (see `docs/evidence.md` §Funding).
+
+## Run
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev        # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Optional env (`next.config` reads `NEXT_PUBLIC_*`; all values default to live Cookie Chain endpoints):
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Var | Default |
+| --- | --- |
+| `NEXT_PUBLIC_RPC_URL` | `https://rpc.cookiescan.io` |
+| `NEXT_PUBLIC_WS_URL` | `wss://rpc.cookiescan.io` |
+| `NEXT_PUBLIC_API_URL` | `https://api.cookiescan.io` |
+| `NEXT_PUBLIC_EXPLORER_URL` | `https://cookiescan.io` |
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+## What's in this phase (D0–D3)
 
-## Learn More
+- **D0 environment**: Node 26 verified; RPC/WS/API endpoints live-probed; api.cookiescan.io CORS
+  verified open (echo `access-control-allow-origin`, preflight 204); cookie-mcp (MIT reference
+  client) cloned at `../cookie-mcp`; aggregator swap recipe located (see below).
+- **Wallet**: `@solana/wallet-adapter-react` + `-react-ui` + Nightly (`0.1.20`), ConnectionProvider
+  → `rpc.cookiescan.io`, commitment `confirmed`. Connect/disconnect shows address + native COOK
+  balance (`getBalance` = lamports) + SPL/Token-2022 positions via `getTokenAccountsByOwner`,
+  enriched with registry symbols/prices.
+- **"Set up Nightly" modal**: exact network values (RPC/WS/symbol/decimals/explorer/bridge) with
+  copy buttons, plus a warning that the legacy `wss://wss.cookiescan.io` host is dead.
+- **Data**: typed fetchers for `/api/status`, `/api/cook`, `/api/tokens(+search)`, `/api/price/:mint`,
+  `/api/markets`, `/api/markets/:mint`, `/v1/assets/trending`, `/v1/assets/search`,
+  `/v1/assets/curated?list=…`, `/v1/assets` — all mapped from live responses.
+- **Live ticker**: Solana pubsub `slotSubscribe` on `wss://rpc.cookiescan.io` with auto-reconnect
+  (exp backoff, sub replay, 45 s re-probe after give-up) + 5 s REST fallback heartbeat. Degraded
+  mode is surfaced in the UI, never silent.
+- **Dashboard grid**: token heatmap (trending + curated majors/lsts/memes, colored by 24h change),
+  token detail (stats grid, recharts price history from 5 s polls, top pools), wallet portfolio.
+  Loading skeletons / error-with-retry / empty states throughout.
 
-To learn more about Next.js, take a look at the following resources:
+## COOK mint decision (short)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+**Native COOK on Cookie Chain = `So11111111111111111111111111111111111111112`** (9 decimals;
+lamports *are* COOK; registry prices it `native: 1`). **`36ZrtQoab5MhhySaP1YSTwUahSk6GRVUTtZ6cuVfm9e1`
+does NOT exist on Cookie Chain** (RPC `getAccountInfo` → null) — it is the Solana-mainnet sCOOK
+mint (Token-2022, 6 dp) used by the Hyperlane warp. The explorer APIs report it as COOK&apos;s
+canonical label in `/api/cook` + `/api/status`, but every on-chain surface (registry, markets,
+v1-assets) keys COOK by the So1111 mint. Evidence + full reasoning: `docs/evidence.md`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+## Swap recipe for the next phase (from cookie-mcp, MIT)
 
-## Deploy on Vercel
+- Aggregator: **Cookiebox** `https://agg.cookiebox.app`
+  - `GET /quote?inputMint&outputMint&amount&slippageBps[&owner]` → `{ route: AggQuote }`
+  - `POST /swap-tx` `{inputMint, outputMint, amount, slippageBps, owner}` → `{ transactionBase64,
+    blockhash, lastValidBlockHeight, route }` (unsigned **v0** tx; server re-quotes + simulates; may
+    lazily extend a lookup table — allow 60 s)
+  - Flow: quote → build → simulate on own RPC → sign locally → sendRawTransaction → confirm with
+    `{blockhash, lastValidBlockHeight}` → explorer link `https://cookiescan.io/tx/<sig>`
+- Reference source: `cookie-mcp/src/core/cookiebox.ts`, `src/core/trade.ts`,
+  `src/core/transfer.ts`, `src/core/confirm.ts`, `src/core/balances.ts`
+  (repo: https://github.com/cookiechain/cookie-mcp, MIT, v0.4.0)
+- Fallback guaranteed-tx path: native COOK transfer = `SystemProgram.transfer` (lamports).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Architecture notes
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+- Client-only data (all APIs CORS-open, no keys server-side) → static-export deployable later.
+- Wallet reads: `getBalance` + `getParsedTokenAccountsByOwner` for Tokenkeg **and** Token-2022,
+  joined against the once-per-session `/api/tokens` registry index.
+- Poll cadence: status 5 s · trending 10 s · detail price 5 s · pools 20 s · universe 30 s.
+
+## Roadmap (later phases)
+
+- **D4–D6**: full analytics (pools explorer, volume curves), portfolio PnL, WS account/logs subs.
+- **D7–D8**: one-click Cookiebox swap + native transfer with confirmations + error surfacing.
+- **D9–D10**: AI insights pane (DeepSeek over fetched data, tap-to-execute only), polish, demo,
+  public deploy + submission.

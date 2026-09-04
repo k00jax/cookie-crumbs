@@ -72,8 +72,11 @@ export function WalletPanel({
     if (!connected) setState({ phase: "idle" });
   }, [connected]);
 
-  const rows = state.phase === "done" ? state.portfolio.tokens.filter((t) => t.amount > 0) : [];
-  const tokenCount = useMemo(() => rows.length, [rows]);
+  const rows = useMemo(
+    () => (state.phase === "done" ? state.portfolio.tokens.filter((t) => t.amount > 0) : []),
+    [state],
+  );
+  const tokenCount = rows.length;
 
   return (
     <Card

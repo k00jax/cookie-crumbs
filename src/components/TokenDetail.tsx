@@ -17,7 +17,6 @@ import { EXPLORER_URL } from "@/lib/constants";
 import {
   changeColor,
   fmtCompact,
-  fmtNum,
   fmtTime,
   fmtUsd,
 } from "@/lib/format";

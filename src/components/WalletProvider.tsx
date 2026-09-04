@@ -7,7 +7,6 @@
 // (exact values in the NightlySetupModal).
 
 import { useMemo } from "react";
-import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
 import {
   ConnectionProvider,
   WalletProvider as AdapterWalletProvider,
@@ -18,13 +17,9 @@ import { COMMITMENT, RPC_URL } from "@/lib/constants";
 
 export function WalletProvider({ children }: { children: React.ReactNode }) {
   const endpoint = RPC_URL;
-  // Nightly connects to whichever network the user has active inside the wallet UI; the app itself
-  // always talks to Cookie Chain through its own Connection (reads, and later tx building). Passing
-  // the standard Mainnet network value keeps the adapter's internal defaults benign for a custom SVM.
-  const wallets = useMemo(
-    () => [new NightlyWalletAdapter({ network: WalletAdapterNetwork.Mainnet })],
-    [],
-  );
+  // NightlyWalletAdapter v0.1.20 takes no constructor config; network selection happens inside the
+  // wallet UI (the user points Nightly at the Cookie Chain network they added).
+  const wallets = useMemo(() => [new NightlyWalletAdapter()], []);
   return (
     <ConnectionProvider endpoint={endpoint} config={{ commitment: COMMITMENT }}>
       <AdapterWalletProvider wallets={wallets} autoConnect>
