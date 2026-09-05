@@ -175,3 +175,28 @@ export interface AssetsListResp {
   sort: string;
   assets: Asset[];
 }
+
+// --- Cookiebox aggregator (swap quotes; shape from cookie-mcp cookiebox.ts, verified live) ---
+export interface AggSegment {
+  pool: string;
+  venue: string;
+  inputMint: string;
+  outputMint: string;
+  inAmount: string;
+  outAmount: string;
+  percentage?: number;
+  hopIndex: number;
+}
+export interface AggQuote {
+  inAmount: string;
+  outAmount: string;
+  feePct: number;
+  feeAmount: string;
+  netOutAmount: string;
+  minOutAmount: string;
+  priceImpactPct: number | null;
+  path: string[];
+  isSplit: boolean;
+  isMultiHop: boolean;
+  segments: AggSegment[];
+}

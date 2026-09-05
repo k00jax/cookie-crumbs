@@ -1,8 +1,9 @@
 // Typed fetchers for the cookiescan REST API (CORS-open, no auth — verified 2026-09-04).
 // All endpoints echo access-control-allow-origin and answer OPTIONS preflight 204.
 
-import { API_URL } from "./constants";
+import { API_URL, AGG_API_URL } from "./constants";
 import type {
+  AggQuote,
   ApiStatus,
   AssetsListResp,
   Asset,
@@ -158,6 +159,77 @@ export function tokensRegistryOnce(): Promise<TokensResp> {
     });
   }
   return registryOnce;
+}
+
+// --- Cookiebox aggregator quotes (CORS-open; recipe from cookie-mcp cookiebox.ts) ---
+export class AggNoRouteError extends Error {
+  constructor() {
+    super("no route found for this pair");
+    this.name = "AggNoRouteError";
+  }
+}
+
+export interface AggQuoteArgs {
+  inputMint: string;
+  outputMint: string;
+  /** raw amount (ui * 10^decimals), as a decimal string — matches cookie-mcp */
+  amount: string;
+  slippageBps: number;
+  owner?: string | null;
+}
+
+export async function fetchAggQuote(args: AggQuoteArgs): Promise<AggQuote> {
+  const q = new URLSearchParams({
+    inputMint: args.inputMint,
+    outputMint: args.outputMint,
+    amount: args.amount,
+    slippageBps: String(args.slippageBps),
+    ...(args.owner ? { owner: args.owner } : {}),
+  });
+  const res = await fetch(`${AGG_API_URL}/quote?${q.toString()}`, {
+    headers: { Accept: "application/json" },
+  });
+  if (res.status === 404) throw new AggNoRouteError();
+  if (!res.ok) throw new ApiError(res.status, `agg quote HTTP ${res.status}`, AGG_API_URL);
+  const body = (await res.json()) as { route?: AggQuote };
+  if (!body.route) throw new AggNoRouteError();
+  return body.route;
+}
+
+export interface AggSwapTxArgs {
+  inputMint: string;
+  outputMint: string;
+  amount: string;
+  slippageBps: number;
+  owner: string;
+}
+/** Build an unsigned v0 swap tx server-side. NOTE: the agg may lazily extend its own lookup
+ *  table during this call — only invoke for a funded, user-confirmed swap (not for preview). */
+export async function buildAggSwapTx(args: AggSwapTxArgs): Promise<{
+  transactionBase64: string;
+  blockhash: string;
+  lastValidBlockHeight: number;
+  route: AggQuote;
+}> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 60_000);
+  try {
+    const res = await fetch(`${AGG_API_URL}/swap-tx`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify(args),
+      signal: ctrl.signal,
+    });
+    if (!res.ok) throw new ApiError(res.status, `agg swap-tx HTTP ${res.status}`, AGG_API_URL);
+    return (await res.json()) as {
+      transactionBase64: string;
+      blockhash: string;
+      lastValidBlockHeight: number;
+      route: AggQuote;
+    };
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 export type { RegistryToken };

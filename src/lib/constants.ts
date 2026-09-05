@@ -39,6 +39,9 @@ export const POLL_TRENDING_MS = 10_000; // /v1/assets/trending
 export const POLL_DETAIL_MS = 5_000; // /api/price/:mint while a token is selected (price history)
 export const POLL_MARKETS_MS = 20_000; // /api/markets/:mint
 
+// Cookiebox aggregator (same router that powers cookiebox.app) — CORS-open (*) verified 2026-09-04.
+export const AGG_API_URL = "https://agg.cookiebox.app";
+
 export function explorerTxUrl(sig: string) {
   return `${EXPLORER_URL}/tx/${sig}`;
 }

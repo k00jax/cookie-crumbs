@@ -7,9 +7,13 @@ import { useChainTicker, useStatus } from "@/lib/hooks";
 import type { Asset } from "@/lib/types";
 import { Heatmap } from "./Heatmap";
 import { NightlySetupModal } from "./NightlySetupModal";
+import { PoolsExplorer } from "./PoolsExplorer";
+import { SwapPanel } from "./SwapPanel";
 import { TickerBar } from "./TickerBar";
 import { TokenDetail } from "./TokenDetail";
 import { WalletPanel } from "./WalletPanel";
+
+type View = "market" | "pools" | "swap";
 
 export function Dashboard() {
   const { status, error: statusError } = useStatus();
@@ -19,6 +23,7 @@ export function Dashboard() {
   const [uniError, setUniError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [nightlyOpen, setNightlyOpen] = useState(false);
+  const [view, setView] = useState<View>("market");
 
   const loadUniverse = useCallback(async () => {
     try {
@@ -44,11 +49,31 @@ export function Dashboard() {
     [universe, selectedId],
   );
 
-  const onSelect = useCallback((a: Asset) => setSelectedId(a.assetId), []);
+  const onSelect = useCallback((a: Asset) => {
+    setSelectedId(a.assetId);
+    setView("market");
+  }, []);
+
   const cookUsd = useMemo(
     () => (status && typeof status.cookUsd === "number" ? status.cookUsd : null),
     [status],
   );
+
+  // mint -> assetId map for pool explorer "open in market view" jumps.
+  const universeMints = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const a of universe) {
+      const mint = a.primaryVariant?.mint;
+      if (mint && a.assetId) m.set(mint, a.assetId);
+    }
+    return m;
+  }, [universe]);
+
+  const tabs: { id: View; label: string }[] = [
+    { id: "market", label: "Market" },
+    { id: "pools", label: "Pools" },
+    { id: "swap", label: "Swap" },
+  ];
 
   return (
     <div className="mx-auto flex max-w-[1500px] flex-col gap-3 px-3 py-3 sm:px-4">
@@ -71,9 +96,9 @@ export function Dashboard() {
           <button
             onClick={() => setNightlyOpen(true)}
             className="hidden rounded-lg border border-zinc-700 px-3 py-2 text-xs text-zinc-300 transition hover:border-amber-400/50 hover:text-amber-300 sm:block"
-            title="Add Cookie Chain to Nightly"
+            title="Add Cookie Chain to Nightly / MetaMask"
           >
-            ⚙ Nightly setup
+            ⚙ Network setup
           </button>
           <span className="wallet-adapter-button-wrap">
             <WalletMultiButton />
@@ -88,9 +113,7 @@ export function Dashboard() {
           <span aria-hidden>⚠</span>
           <span>
             Live WebSocket unreachable (<span className="font-mono">wss://rpc.cookiescan.io</span>) —
-            ticker running on 5 s REST polls. The legacy{" "}
-            <span className="font-mono">wss://wss.cookiescan.io/stream</span> host is defunct
-            (301-redirects to bakedbazaar.art, TLS cert mismatch) and is not used.
+            ticker running on 5 s REST polls.
           </span>
         </div>
       )}
@@ -100,36 +123,63 @@ export function Dashboard() {
         </div>
       )}
 
-      {/* Main grid */}
-      <main className="grid grid-cols-1 gap-3 lg:grid-cols-3">
-        <div className="flex min-w-0 flex-col gap-3 lg:col-span-2">
-          <Heatmap
-            assets={universe}
-            loading={uniLoading}
-            error={uniError}
-            selectedId={selected?.assetId ?? null}
-            onSelect={onSelect}
-            onRetry={() => void loadUniverse()}
-          />
-          <TokenDetail asset={selected} onSelectAsset={onSelect} />
-        </div>
-        <div className="flex min-w-0 flex-col gap-3">
-          <WalletPanel cookUsd={cookUsd} onOpenNightlySetup={() => setNightlyOpen(true)} />
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-4 text-[11px] leading-relaxed text-zinc-500">
-            <div className="mb-1 font-semibold uppercase tracking-wider text-zinc-400">Chain notes</div>
-            <ul className="list-inside space-y-1">
-              <li>• Native COOK on Cookie Chain = <span className="font-mono text-zinc-400">So1111…1112</span> (lamports, 9 dp).</li>
-              <li>• <span className="font-mono text-zinc-400">36Zr…</span> is the Solana-side sCOOK mint — absent on this chain (RPC: not found).</li>
-              <li>• RPC <span className="font-mono text-zinc-400">rpc.cookiescan.io</span> · WS <span className="font-mono text-zinc-400">wss://rpc.cookiescan.io</span>.</li>
-              <li>• Reads only in this phase — every tx is user-initiated and owner-approved (swap phase is next).</li>
-            </ul>
+      {/* View tabs */}
+      <nav className="flex gap-1.5">
+        {tabs.map((t) => (
+          <button
+            key={t.id}
+            onClick={() => setView(t.id)}
+            className={`rounded-lg px-4 py-1.5 text-sm font-semibold transition ${
+              view === t.id
+                ? "bg-amber-400 text-zinc-950"
+                : "border border-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </nav>
+
+      {/* View content */}
+      <main>
+        {view === "market" && (
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+            <div className="flex min-w-0 flex-col gap-3 lg:col-span-2">
+              <Heatmap
+                assets={universe}
+                loading={uniLoading}
+                error={uniError}
+                selectedId={selected?.assetId ?? null}
+                onSelect={onSelect}
+                onRetry={() => void loadUniverse()}
+              />
+              <TokenDetail asset={selected} />
+            </div>
+            <div className="flex min-w-0 flex-col gap-3">
+              <WalletPanel cookUsd={cookUsd} onOpenNightlySetup={() => setNightlyOpen(true)} />
+              <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-4 text-[11px] leading-relaxed text-zinc-500">
+                <div className="mb-1 font-semibold uppercase tracking-wider text-zinc-400">Chain notes</div>
+                <ul className="list-inside space-y-1">
+                  <li>• Native COOK on Cookie Chain = <span className="font-mono text-zinc-400">So1111…1112</span> (lamports, 9 dp).</li>
+                  <li>• <span className="font-mono text-zinc-400">36Zr…</span> is the Solana-side sCOOK mint — absent on this chain (RPC: not found).</li>
+                  <li>• RPC <span className="font-mono text-zinc-400">rpc.cookiescan.io</span> · WS <span className="font-mono text-zinc-400">wss://rpc.cookiescan.io</span>.</li>
+                  <li>• Every tx is user-initiated and owner-approved — nothing auto-signs.</li>
+                </ul>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
+
+        {view === "pools" && (
+          <PoolsExplorer universeMints={universeMints} onOpenAsset={(assetId) => { setSelectedId(assetId); setView("market"); }} />
+        )}
+
+        {view === "swap" && <SwapPanel assets={universe} cookUsd={cookUsd} />}
       </main>
 
       <footer className="border-t border-zinc-800/70 pb-4 pt-3 text-center text-[10px] text-zinc-600">
-        CRUMBS · dev build (D0–D3) — not deployed · data: api.cookiescan.io + rpc.cookiescan.io ·
-        wallet: Nightly · funding/bridge & swap flows gated on wallet-owner approval
+        CRUMBS · crumbs.fonger.ai · data: api.cookiescan.io + rpc.cookiescan.io + agg.cookiebox.app ·
+        wallet: Nightly / MetaMask · reads free, every tx owner-approved
       </footer>
 
       <NightlySetupModal open={nightlyOpen} onClose={() => setNightlyOpen(false)} />
