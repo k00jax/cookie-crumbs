@@ -24,7 +24,7 @@ const tokenCount = accts[0].value.length + accts[1].value.length;
 const ver = await conn.getVersion();
 const slot = await conn.getSlot();
 
-console.log("=== CRUMBS wallet verification (empty throwaway account — no funds) ===");
+console.log("=== CHIP wallet verification (empty throwaway account — no funds) ===");
 console.log("RPC        :", RPC, `(version ${JSON.stringify(ver)})`);
 console.log("slot       :", slot.toLocaleString());
 console.log("keypair    : generated in-memory, NOT persisted");

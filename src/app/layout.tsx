@@ -5,7 +5,7 @@ import "./globals.css";
 import "@solana/wallet-adapter-react-ui/styles.css";
 
 export const metadata: Metadata = {
-  title: "CRUMBS — Cookie Chain Market Terminal",
+  title: "CHIP — Cookie Chain Market Terminal",
   description:
     "Live Cookie Chain analytics: token heatmap, price history, pools and connected-wallet portfolio. Wallet: Nightly.",
 };

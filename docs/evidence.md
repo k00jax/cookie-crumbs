@@ -1,4 +1,4 @@
-# D0 evidence — CRUMBS (verified live 2026-09-04 on the ODROID dev box)
+# D0 evidence — CHIP (verified live 2026-09-04 on the ODROID dev box)
 
 Raw response captures: `/home/odroid/cookie-recon/*.json` (status.json, cook.json, tokens.json,
 markets.json, trending.json, search_cook.json, search_a.json, search_crumbs.json) and
@@ -77,7 +77,7 @@ Key source files: `src/core/cookiebox.ts` (agg quote/swap-tx), `candyshop.ts` (a
   the explorer's own docs/developer-guide state ("WebSocket: wss://rpc.cookiescan.io"). Verified:
   connect in 1.18 s; `slotSubscribe` → `{"jsonrpc":"2.0","result":39941,"id":1}`. Suitable methods:
   `slotSubscribe`, `accountSubscribe`, `logsSubscribe`, `programSubscribe`.
-- CRUMBS therefore ticks live via `slotSubscribe` on `wss://rpc.cookiescan.io` (auto-reconnect, sub
+- CHIP therefore ticks live via `slotSubscribe` on `wss://rpc.cookiescan.io` (auto-reconnect, sub
   replay) and keeps prices warm with 5 s REST polls; WS URL is env-overridable in case Cookie Chain
   ever ships a dedicated feed. Documented in README + Nightly modal (warning against the dead host).
 
@@ -95,7 +95,7 @@ Key source files: `src/core/cookiebox.ts` (agg quote/swap-tx), `candyshop.ts` (a
 | cookie-mcp `config.ts:74` | `COOK_MINT = So1111…` (comment: "Native/wrapped COOK is Solana's NATIVE_MINT, 9 decimals"); `:131` warns mint string alone is ambiguous across chains; `:169` | `36Zr` = `BRIDGE.solana.splMint` (Solana mainnet sCOOK, Token-2022, **6 dp**) |
 | Solana mainnet | 36Zr sCOOK is a Token-2022 6-dp mint there (bridge collateral) |
 
-**Decision (adopted by CRUMBS):** native COOK on Cookie Chain = **So1111…1112**, 9 decimals;
+**Decision (adopted by CHIP):** native COOK on Cookie Chain = **So1111…1112**, 9 decimals;
 lamport balance = COOK balance; all swaps/transfers key COOK as So1111 (matches cookie-mcp, the
 reference client). **36Zr… is display/documentation only** — the Solana-side bridge mint; never used
 for on-chain ops on Cookie Chain. USD price = cookUsd (identical across `/api/status`,

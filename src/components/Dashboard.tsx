@@ -83,7 +83,7 @@ export function Dashboard() {
           <span className="text-3xl" aria-hidden>🍪</span>
           <div>
             <h1 className="text-xl font-black leading-none tracking-tight text-white">
-              CRUMBS
+              CHIP
               <span className="ml-2 bg-gradient-to-r from-amber-300 to-orange-400 bg-clip-text text-sm font-bold text-transparent">
                 market terminal
               </span>
@@ -178,7 +178,7 @@ export function Dashboard() {
       </main>
 
       <footer className="border-t border-zinc-800/70 pb-4 pt-3 text-center text-[10px] text-zinc-600">
-        CRUMBS · crumbs.fonger.ai · data: api.cookiescan.io + rpc.cookiescan.io + agg.cookiebox.app ·
+        CHIP · chip.fonger.ai · data: api.cookiescan.io + rpc.cookiescan.io + agg.cookiebox.app ·
         wallet: Nightly / MetaMask · reads free, every tx owner-approved
       </footer>
 

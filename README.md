@@ -1,10 +1,10 @@
-# CRUMBS — Cookie Chain Market Terminal 🍪
+# CHIP — Cookie Chain Market Terminal 🍪
 
 Live analytics terminal + portfolio tracker for [Cookie Chain](https://cookiescan.io) (independent
 SVM/Agave). Real-time market heatmap, token detail with rolling price history, pool explorer, and a
 connected-wallet portfolio — plus a one-click swap coming in the next phase.
 
-**Status: D0–D3 build — LIVE at [https://crumbs.fonger.ai](https://crumbs.fonger.ai) (read-only phase).**
+**Status: D0–D3 build — LIVE at [https://chip.fonger.ai](https://chip.fonger.ai) (read-only phase).**
 Swap flow + AI pane are the next phases; every transaction in this app is user-initiated, and
 funding/bridge stays owner-approved (see `docs/evidence.md` §Funding). Built for the Cookie Chain
 cApp bounty (Superteam Earn; deadline 2026-09-22).
