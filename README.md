@@ -1,15 +1,31 @@
 # CHIP — Cookie Chain Market Terminal 🍪
 
 Live analytics terminal + portfolio tracker for [Cookie Chain](https://cookiescan.io) (independent
-SVM/Agave). Real-time market heatmap, token detail with rolling price history, pool explorer, and a
-connected-wallet portfolio — plus a one-click swap coming in the next phase.
+SVM/Agave). Real-time market heatmap, token detail with rolling price history, pool explorer, live
+Cookiebox swap quotes, and a connected-wallet portfolio.
 
-**Status: D0–D3 build — LIVE at [https://chip.fonger.ai](https://chip.fonger.ai) (read-only phase).**
-Swap flow + AI pane are the next phases; every transaction in this app is user-initiated, and
-funding/bridge stays owner-approved (see `docs/evidence.md` §Funding). Built for the Cookie Chain
-cApp bounty (Superteam Earn; deadline 2026-09-22).
+**Status: LIVE at [https://chip.fonger.ai](https://chip.fonger.ai)** — submitted to the Cookie Chain
+cApp bounty (Superteam Earn, 1,000 USDC pool, deadline 2026-09-22). Every transaction is
+user-initiated; nothing auto-signs; no keys server-side.
 
 > Engineered by the Trivance Council (dev-3 agent) for k00jax.
+
+## Bounty rubric coverage
+
+| Requirement | Where |
+| --- | --- |
+| Connect a wallet (Nightly required) | `src/components/WalletProvider.tsx` — Nightly adapter + Wallet-Standard auto-detect (MetaMask also works) |
+| Display connected wallet address | Portfolio header, expandable full address + cookiescan explorer link |
+| Read on-chain balances | `getBalance` (native COOK) + `getParsedTokenAccountsByOwner` (SPL + Token-2022), registry-enriched USD |
+| Transaction execution | Swap pipeline wired: Cookiebox quote → build unsigned v0 tx → wallet `sendTransaction` → confirm (`blockhash`/`lastValidBlockHeight`) → explorer link. Executes when the wallet holds COOK (gas); no faucet exists on Cookie Chain — see `docs/qa-demo.md` |
+| Transaction confirmation handling | `confirmTransaction("confirmed")` + status states (building → signing → confirming → done/error) with explorer link |
+| Error handling + user feedback | No-route / quote error / insufficient-balance / reject states, error boundary (`app/error.tsx`), skeletons + retry everywhere |
+| Analytics, charts, dashboards | Heatmap (trending + curated), token detail w/ rolling recharts chart, pools explorer w/ liquidity-by-venue chart |
+| Use Cookie Chain programs/APIs | api.cookiescan.io (REST + DAS-style feeds), rpc.cookiescan.io pubsub ticker, Cookiebox aggregator (agg.cookiebox.app), recipe from cookie-mcp (MIT) |
+| Live data / activity | WS slotSubscribe ticker + 5 s REST polls |
+| Deployed + publicly accessible | https://chip.fonger.ai (Cloudflare tunnel → ODROID static export) |
+| Open source + README | This repo, MIT license |
+| X thread demo + bridge guide | https://x.com/blackf1re/status/2096708732902093125 (bridge guide in post 5) |
 
 ## Run
 
@@ -27,7 +43,7 @@ Optional env (`next.config` reads `NEXT_PUBLIC_*`; all values default to live Co
 | `NEXT_PUBLIC_API_URL` | `https://api.cookiescan.io` |
 | `NEXT_PUBLIC_EXPLORER_URL` | `https://cookiescan.io` |
 
-## What's in this phase (D0–D3)
+## What's in this build (D0–D7)
 
 - **D0 environment**: Node 26 verified; RPC/WS/API endpoints live-probed; api.cookiescan.io CORS
   verified open (echo `access-control-allow-origin`, preflight 204); cookie-mcp (MIT reference
